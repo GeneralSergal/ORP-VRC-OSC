@@ -1,6 +1,3 @@
-# `README.md`
-
-````md
 # ORP VRC-OSC
 
 ORP VRC-OSC is a modular OSC middleware framework for VRChat avatars.
