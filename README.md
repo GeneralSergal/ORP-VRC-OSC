@@ -1,67 +1,57 @@
+# `README.md`
+
+````md
 # ORP VRC-OSC
 
-ORP VRC-OSC is a modular OSC middleware runtime for VRChat avatars built around deterministic physiology synthesis, layered telemetry, and scalable sensor-bus architecture.
+ORP VRC-OSC is a modular OSC middleware framework for VRChat avatars.
 
-This project transforms avatar control from simple animation toggles into a structured real-time middleware platform.
+The project was designed around deterministic state synthesis instead of traditional parameter blending.  
+Rather than forcing all telemetry sources into one shared numerical space, the framework separates avatar physiology into isolated signal layers and merges them through a controlled synthesis bus.
+
+This allows stable expansion without rewriting core logic.
 
 ---
 
-# Philosophy
+# Core Philosophy
 
-ORP VRC-OSC is built around several engineering principles:
+ORP VRC-OSC treats avatar state as layered middleware:
 
-- deterministic runtime behavior
-- modular middleware architecture
-- strict signal isolation
-- layered state telemetry
-- hardware-safe synthesis
-- scalable physiology systems
+| Layer | Purpose |
+|---|---|
+| Observation Layer | Passive environmental scanning |
+| Locomotion Layer | Active movement state |
+| Voice Layer | High-priority transient excitation |
+| Entropy Layer | Organic jitter / realism |
+| Safety Layer | Hard override / shutdown |
 
-The runtime treats avatar systems like a distributed telemetry stack instead of disconnected animation drivers.
+The framework enforces deterministic transition boundaries:
+
+- `0.00 → 0.50` = Observation domain
+- `0.51 → 1.00` = Locomotion domain
+
+This prevents overlap between passive and active states.
 
 ---
 
 # Features
 
-## Deterministic Glow Architecture
-
-Glow synthesis is separated into two mathematically isolated domains:
-
-| Layer | Range | Purpose |
-|---|---|---|
-| Observation Layer | `0.00 → 0.50` | Passive scanning / head movement |
-| Locomotion Layer | `0.51 → 1.00` | Active movement / kinetic state |
-
-This creates a hard threshold between passive and active states.
-
----
-
-## Modular Sensor Buses
-
-Each subsystem operates independently before feeding into the synthesis runtime.
-
-Current buses:
-
-- Voice excitation
-- Locomotion
-- Observation / head movement
-- Entropy / jitter
-- Sync heartbeat
-
-Planned buses:
-
-- Heartbeat
-- Eye tracking
-- Vision
-- Stress telemetry
-- Environmental response
-- Presence detection
+- Modular OSC middleware architecture
+- Deterministic locomotion gating
+- Observation vs locomotion separation
+- Voice excitation bypass system
+- Organic entropy synthesis
+- Safe Mode override
+- VRChat OSC integration
+- VRCFury sync support
+- Expandable sensor pipeline
+- Modular runtime loading
+- Hot-swappable configuration files
 
 ---
 
-## State Telemetry via MainHue
+# State Definitions
 
-`MainHue` functions as a high-level telemetry channel.
+Default hue mapping:
 
 | State | Hue |
 |---|---|
@@ -70,67 +60,108 @@ Planned buses:
 | SAFE_MODE | `0.475` |
 | CALM | `0.65` |
 
-Hard clamps prevent floating-point drift and parameter flicker.
-
 ---
 
-# Architecture
+# Modular Architecture
 
 ```text
-VRCRouter/
+ORP-VRC-OSC/
 │
 ├── osc_bridge.py
-├── launch.bat
-│
-├── config/
-│   └── hues.py
-│
-├── core/
-│   ├── state.py
-│   ├── parameters.py
-│   ├── transport.py
-│   └── utils.py
+├── physiology.py
 │
 ├── modules/
-│   ├── physiology.py
+│   ├── voice.py
 │   ├── locomotion.py
 │   ├── observation.py
-│   ├── voice.py
-│   ├── sync.py
-│   ├── modes.py
-│   └── handlers.py
+│   ├── heartbeat.py
+│   ├── vision.py
+│   └── safety.py
 │
-└── runtime/
-    └── update_loop.py
+├── config/
+│   ├── hues.json
+│   ├── thresholds.json
+│   └── runtime.json
+│
+├── launch/
+│   ├── launch.bat
+│   └── launch_debug.bat
+│
+├── LICENSE
+└── README.md
+````
+
+---
+
+# Signal Bus Design
+
+## Observation Layer
+
+Passive telemetry:
+
+* Head rotation
+* Camera movement
+* Environmental scanning
+
+Restricted to:
+
+```text
+0.00 → 0.50
 ```
 
----
-
-# Runtime Model
-
-ORP behaves like a layered middleware stack.
-
-| Layer | Function |
-|---|---|
-| Physical Layer | Locomotion gate |
-| Observation Layer | Head telemetry |
-| Transport Layer | Voice excitation |
-| Application Layer | Entropy / jitter |
-| Synthesis Layer | Physiology output |
-
-This prevents sensor collision and procedural parameter spaghetti.
+This layer never activates locomotion.
 
 ---
 
-# Installation
+## Locomotion Layer
 
-## Requirements
+Physical motion telemetry:
 
-- Python 3.10+
-- VRChat OSC enabled
-- python-osc
+* VelocityMagnitude
+* Movement inertia
+* Ground energy
 
-Install dependency:
+Restricted to:
+
+```text
+0.51 → 1.00
+```
+
+This acts as the hard activation threshold.
+
+---
+
+## Voice Layer
+
+Voice is treated as a high-priority interrupt bus.
+
+It bypasses locomotion gating entirely.
+
+Voice affects:
+
+* CoreGlow
+* SensoryGlow
+
+without requiring movement activation.
+
+---
+
+# OSC Ports
+
+Default routing:
+
+| Direction    | Port   |
+| ------------ | ------ |
+| VRChat → ORP | `9005` |
+| ORP → VRChat | `9000` |
+
+---
+
+# Requirements
+
+Python 3.10+
+
+Install dependencies:
 
 ```bash
 pip install python-osc
@@ -138,120 +169,78 @@ pip install python-osc
 
 ---
 
-# Startup
+# Launch
 
-Run:
+Windows:
 
 ```bat
-launch.bat
-```
-
-Or directly:
-
-```bash
-python osc_bridge.py
+launch\launch.bat
 ```
 
 ---
 
-# OSC Ports
+# Example Runtime
 
-| Purpose | Port |
-|---|---|
-| VRChat Output | `9000` |
-| Runtime Input | `9005` |
-
----
-
-# Current Parameter Outputs
-
-| Parameter | Type |
-|---|---|
-| MainHue | float |
-| CoreGlow | float |
-| SensoryGlow | float |
-| GroundGlow | float |
-| BreathingOn | bool |
-| TailWag | bool |
-
----
-
-# Sensor Inputs
-
-| Input | Purpose |
-|---|---|
-| Voice | Excitation bus |
-| VelocityMagnitude | Locomotion |
-| AngularY | Observation layer |
-| Earmuffs | Calm mode |
-| SafeMode | Runtime suppression |
-| VF52 Sync | Heartbeat validation |
-
----
-
-# Design Goals
-
-The project is designed around:
-
-- deterministic synthesis
-- modular architecture
-- scalable middleware
-- stable threshold gating
-- future hardware integration
-- physiology abstraction
-
-The runtime intentionally avoids:
-
-- parameter blending chaos
-- uncontrolled interpolation
-- hidden state coupling
-- monolithic runtime structures
-
----
-
-# Planned Modules
-
-Future integrations:
-
-- Heartbeat synthesis
-- Eye tracking
-- Stress telemetry
-- Environmental adaptation
-- Biometric integration
-- Distributed OSC networking
-- Multi-avatar synchronization
-
----
-
-# Project Status
-
-Current status:
-
-- Stable modular architecture
-- Deterministic locomotion gate
-- Observation/locomotion separation complete
-- Middleware foundation operational
+```text
+🚀 ORP VRC-OSC Online
+Observation Layer Active
+Locomotion Gate Stable
+Voice Excitation Bus Online
+Heartbeat Middleware Ready
+```
 
 ---
 
 # License
 
-This project is licensed under the:
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
 
-GNU Affero General Public License v3.0 (AGPLv3)
+Commercial closed-source forks are prohibited.
 
-All derivative works must:
-- preserve attribution
-- remain open-source
-- disclose modifications
-- maintain AGPL licensing
+Any distributed or networked modification must remain open-source under the same license.
 
-This ensures ORP remains open middleware infrastructure and cannot be silently absorbed into proprietary systems.
+See `LICENSE` for full terms.
 
 ---
 
-# Author
+# Design Notes
 
-Laurentius Maximus
+This framework intentionally avoids:
 
-ORP Runtime Architecture / Physiology Middleware System
+* parameter spaghetti
+* uncontrolled interpolation
+* unstable state blending
+* hidden middleware
+* hardcoded monolithic logic
+
+The goal is deterministic avatar physiology middleware.
+
+---
+
+# Warning
+
+This framework directly manipulates VRChat OSC avatar parameters.
+
+Use responsibly.
+
+You are responsible for:
+
+* avatar safety
+* parameter validation
+* OSC routing stability
+* runtime testing
+
+---
+
+# Credits
+
+Created by Laurentius Maximus.
+
+ORP Framework Architecture:
+
+* Deterministic middleware synthesis
+* Layered physiology bus
+* Threshold-gated state topology
+* Modular telemetry routing
+
+
