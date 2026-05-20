@@ -1,0 +1,59 @@
+{
+  "ACTIVE": 0.0,
+  "CALM_MOVING": 0.3,
+  "SAFE_MODE": 0.475,
+  "CALM": 0.65,
+
+  "GLOW_DOMAINS": {
+    "CoreGlow": {
+      "passive": [0.10, 0.40],
+      "active": [0.51, 1.00]
+    },
+
+    "SensoryGlow": {
+      "passive": [0.15, 0.50],
+      "active": [0.51, 1.00]
+    },
+
+    "GroundGlow": {
+      "passive": [0.05, 0.35],
+      "active": [0.51, 0.90]
+    }
+  },
+
+  "STATE_CONFIG": {
+    "CALM": {
+      "jitter": 0.007,
+      "breathing": false,
+      "tailwag": false
+    },
+
+    "ACTIVE": {
+      "jitter": 0.019,
+      "breathing": true,
+      "tailwag": true
+    },
+
+    "SAFE_MODE": {
+      "jitter": 0.0,
+      "breathing": false,
+      "tailwag": false
+    }
+  },
+
+  "PIPELINE": {
+    "locomotion_threshold": 0.035,
+    "movement_smoothing": 0.085,
+    "excitation_decay": 0.985,
+    "movement_decay": 0.92,
+    "head_decay": 0.88,
+    "entropy_decay": 0.983,
+
+    "voice_boost_multiplier": 2.5,
+
+    "flicker_min": 0.82,
+    "flicker_max": 1.08,
+
+    "hardware_zero_clamp": 0.00001
+  }
+}
