@@ -1,0 +1,10 @@
+{
+  "PIPELINE": {
+    "entropy_decay": 0.96,
+    "excitation_decay": 0.92,
+    "movement_decay": 0.93,
+    "head_decay": 0.95,
+    "flicker_min": 0.85,
+    "flicker_max": 1.15
+  }
+}
