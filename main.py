@@ -6,7 +6,6 @@
 import tkinter as tk
 import threading
 import sys
-import os
 
 from modules.osc_vrc_bridge import start_osc_server
 from modules.physiology import start_physiology
@@ -15,40 +14,43 @@ from modules.llm_bridge_lmstudio import LMStudioBridge
 from modules.logger import ORPLogger
 from gui.orp_gui import ORPGUI
 
+
 def main():
-    # Initialize Persistent Logger
+    # Initialize Logger
     logger = ORPLogger()
-    
+
     print("[ORP] Boot sequence starting...")
+
     root = tk.Tk()
 
     # =====================================================
-    # LLM BRIDGE & GUI INITIALIZATION
+    # LLM BRIDGE
     # =====================================================
     llm_bridge = None
     try:
         llm_bridge = LMStudioBridge()
-        print("[ORP] LLM Bridge initialized")
+        logger.log("LLM Bridge initialized", None)
     except Exception as e:
-        print(f"[ORP] LLM Bridge init failed: {e}")
+        logger.log(f"LLM Bridge init failed: {e}", None)
 
+    # =====================================================
+    # GUI
+    # =====================================================
     try:
-        # Initialize GUI first so it's ready for the bridge to attach
         app = ORPGUI(root, llm_bridge=llm_bridge)
         
         if llm_bridge:
             llm_bridge.attach_gui(app)
             
-        # Log to both File and GUI
         logger.log("ORP v2.7 Boot Sequence Started", app)
         logger.log("System Dashboard Online", app)
     except Exception as e:
-        print(f"[ORP] GUI Critical Failure: {e}")
+        logger.log(f"GUI Critical Failure: {e}", None)
         root.destroy()
         return
 
     # =====================================================
-    # START BACKGROUND SERVICES
+    # BACKGROUND SERVICES
     # =====================================================
     services = [
         (lambda: start_osc_server(app.handle_incoming_osc, 9005), "OSC Input Server (9005)"),
@@ -64,17 +66,18 @@ def main():
             logger.log(f"{name} Failed: {e}", app)
 
     # =====================================================
-    # START LLM BRIDGE
+    # LLM BRIDGE - Manual Control Only
     # =====================================================
     if llm_bridge:
-        try:
-            llm_bridge.start()
-            logger.log("🧠 LM Studio Bridge ONLINE", app)
-        except Exception as e:
-            logger.log(f"LLM Bridge Start Failed: {e}", app)
+        logger.log("🧠 LM Studio Bridge initialized (use ENABLE button in LLM tab)", app)
+    else:
+        logger.log("🧠 LLM Bridge not available", app)
 
     logger.log("=== ORP Runtime Fully Started ===", app)
+    logger.log("Herald of Darkness — Awake", app)
+
     root.mainloop()
+
 
 if __name__ == "__main__":
     try:
