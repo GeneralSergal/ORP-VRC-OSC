@@ -1,93 +1,52 @@
-# =========================================================
-# ORP v2.6
-# MAIN RUNTIME
-# =========================================================
-
 import tkinter as tk
-
-from modules.osc_vrc_bridge import start_osc_server
+import threading
+import modules.osc_vrc_bridge as bridge
 from modules.physiology import start_physiology
 from modules.vrchat_output import start_vrchat_output
-
 from gui.orp_gui import ORPGUI
 
-
-# =========================================================
-# MAIN
-# =========================================================
+current_osc_port = 9005
 
 def main():
+    root = tk.Tk()
+    
+    def log(msg):
+        print(f"[ ORP ] {msg}")
+        if 'app' in globals() or 'app' in locals():
+            app.push_log(msg)
 
-    print("[ ORP ] Boot sequence starting...")
+    def update_osc_port(new_port):
+        global current_osc_port
+        if new_port == current_osc_port:
+            return
+        
+        log(f"Rebinding Network Pipeline... Switching to Port {new_port}")
+        # Call shutdown on the old server instance if running
+        if hasattr(bridge, 'active_server') and bridge.active_server:
+            try:
+                bridge.active_server.shutdown()
+                bridge.active_server.server_close()
+            except Exception as e:
+                log(f"Clean socket disconnect trace: {e}")
 
-    # -----------------------------------------------------
-    # OSC INPUT
-    # -----------------------------------------------------
+        current_osc_port = new_port
+        # Spin up a completely fresh network container thread on new target port
+        threading.Thread(target=lambda: bridge.start_osc_server(app.handle_incoming_osc, current_osc_port), daemon=True).start()
 
-    try:
+    app = ORPGUI(root, on_port_change_callback=update_osc_port)
+    log("Boot sequence starting...")
 
-        start_osc_server()
+    threads = [
+        ("OSC", lambda: bridge.start_osc_server(app.handle_incoming_osc, current_osc_port)), 
+        ("Physiology", start_physiology), 
+        ("Output", start_vrchat_output)
+    ]
 
-        print("[ ORP ] OSC Input Online")
+    for name, target in threads:
+        threading.Thread(target=target, daemon=True).start()
+        log(f"{name} thread initialized and running.")
 
-    except Exception as e:
-
-        print(f"[ ORP ] OSC Input FAILED: {e}")
-
-    # -----------------------------------------------------
-    # PHYSIOLOGY
-    # -----------------------------------------------------
-
-    try:
-
-        start_physiology()
-
-        print("[ ORP ] Physiology Online")
-
-    except Exception as e:
-
-        print(f"[ ORP ] Physiology FAILED: {e}")
-
-    # -----------------------------------------------------
-    # VRCHAT OUTPUT
-    # -----------------------------------------------------
-
-    try:
-
-        start_vrchat_output()
-
-        print("[ ORP ] VRChat Output Online")
-
-    except Exception as e:
-
-        print(f"[ ORP ] VRChat Output FAILED: {e}")
-
-    # -----------------------------------------------------
-    # GUI
-    # -----------------------------------------------------
-
-    try:
-
-        root = tk.Tk()
-
-        app = ORPGUI(root)
-
-        app.push_log("ORP Runtime Started")
-        app.push_log("OSC Input Active")
-        app.push_log("Physiology Active")
-        app.push_log("VRChat Output Active")
-
-        root.mainloop()
-
-    except Exception as e:
-
-        print(f"[ ORP ] GUI FAILED: {e}")
-
-
-# =========================================================
-# ENTRY
-# =========================================================
+    root.mainloop()
 
 if __name__ == "__main__":
-
     main()
