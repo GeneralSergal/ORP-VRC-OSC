@@ -1,30 +1,35 @@
 # ORP-VRC-OSC
 
-**ORP** (Organic Resonance Physiology) is a minimal layered OSC middleware for VRChat avatars.
+**ORP** (Organic Resonance Physiology) is a minimal, layered OSC middleware framework for VRChat avatars.
 
-It replaces messy parameter blending with **deterministic state synthesis** across isolated layers merged through a controlled bus. The result is more stable, recoverable, and organic avatar behavior.
+It replaces traditional messy parameter blending with **deterministic state synthesis** across cleanly isolated layers. The result is more stable, recoverable, and organic avatar behavior.
 
 ---
 
 ## Core Philosophy
 
 - **No blending. Only synthesis.**
-- Hard domain gating: `0.00–0.50` = Observation domain | `0.51–1.00` = Locomotion domain
-- Voice has priority bypass
-- Entropy layer adds natural jitter
-- Strong deterministic recovery + Safe Mode
+- Hard domain gating: `0.00–0.50` = Observation | `0.51–1.00` = Locomotion
+- Voice excitation has priority bypass
+- Entropy layer injects natural jitter
+- Strong deterministic recovery + instant Safe Mode
 
 ---
 
 ## Features
 
 - Layered deterministic physiology engine
-- Real-time voice-reactive excitation
-- Organic entropy injection
-- Updated real-time GUI dashboard
+- Real-time voice-reactive behavior
+- Organic entropy system
+- **Advanced GUI Dashboard v2.6** with:
+  - Live Avatar State monitoring
+  - Shader visualization (CoreGlow, SensoryGlow, etc.)
+  - Full OSC Live Debugger
+  - Parameter routing table
+  - Port rebinding & live log
 - Hot-swappable configuration
-- Local LLM support (bridge ready for reconnection)
-- Clean minimal runtime
+- Local LLM support ready (bridge available)
+- Clean minimal core
 
 ---
 
@@ -45,7 +50,7 @@ ORP-VRC-OSC/
 │
 ├── gui/
 │   ├── __init__.py
-│   └── orp_gui.py          # Updated
+│   └── orp_gui.py          # v2.6 with full debugger
 │
 └── modules/
     ├── __init__.py
@@ -54,7 +59,7 @@ ORP-VRC-OSC/
     ├── physiology.py
     ├── state.py
     ├── vrchat_output.py
-    └── llm_bridge_lmstudio.py   # Legacy - disconnected
+    └── llm_bridge_lmstudio.py   # Legacy - for future reconnection
 ```
 
 ---
@@ -87,17 +92,22 @@ python main.py
 
 ---
 
+## Screenshots
+
+**System Dashboard** — Live physiology + shader visualization  
+**OSC Live Debugger** — Full parameter routing table + live inspection
+
+---
+
 ## Design Principles
 
 - Deterministic over interpolated
-- Readable & debuggable
+- Maximum readability & debuggability
 - Minimal core, high expandability
-- No hidden middleware or spaghetti
+- No hidden middleware
 
 ---
 
 ## License
 
 **GNU Affero General Public License v3.0 (AGPL-3.0)**
-
-**Want me to make any changes** (add screenshots section, make it shorter, more technical, etc.) before you push? Or just "**push it**"?
