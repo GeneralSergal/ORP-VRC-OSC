@@ -1,11 +1,26 @@
 # =========================================================
-# ORP-VRC-OSC v2.7
+# ORP-VRC-OSC v2.7 - OPTIMIZED RUNTIME
 # Main Runtime
 # =========================================================
 
-import tkinter as tk
+import customtkinter as ctk 
 import threading
 import sys
+import json
+import os
+
+# Helper to load scaling factor
+def get_scale():
+    config_path = os.path.join(os.path.dirname(__file__), "config", "config.json")
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r") as f:
+                return json.load(f).get("scale", 1.25)
+        except:
+            pass
+    return 1.25
+
+ctk.set_widget_scaling(get_scale())
 
 from modules.osc_vrc_bridge import start_osc_server
 from modules.physiology import start_physiology
@@ -13,15 +28,15 @@ from modules.vrchat_output import start_vrchat_output
 from modules.llm_bridge_lmstudio import LMStudioBridge
 from modules.logger import ORPLogger
 from gui.orp_gui import ORPGUI
-
+from modules.speech_listener import start_listening 
 
 def main():
-    # Initialize Logger
     logger = ORPLogger()
-
     print("[ORP] Boot sequence starting...")
 
-    root = tk.Tk()
+    root = ctk.CTk() 
+    root.title("ORP Dashboard v2.7 — Herald of Darkness")
+    root.geometry("1280x920")
 
     # =====================================================
     # LLM BRIDGE
@@ -37,20 +52,30 @@ def main():
     # GUI
     # =====================================================
     try:
+        # ORPGUI internally handles all status updates via its own _update_loop
         app = ORPGUI(root, llm_bridge=llm_bridge)
         
         if llm_bridge:
             llm_bridge.attach_gui(app)
             
+            # Start STT Listener
+            try:
+                start_listening(llm_bridge)
+                logger.log("🎙️ Speech Recognition Online", app)
+            except Exception as e:
+                logger.log(f"🎙️ Speech Recognition failed to start: {e}", app)
+            
         logger.log("ORP v2.7 Boot Sequence Started", app)
         logger.log("System Dashboard Online", app)
     except Exception as e:
-        logger.log(f"GUI Critical Failure: {e}", None)
+        print(f"[ORP] GUI Initialization Error: {e}")
+        import traceback
+        traceback.print_exc()
         root.destroy()
         return
 
     # =====================================================
-    # BACKGROUND SERVICES
+    # SERVICES
     # =====================================================
     services = [
         (lambda: start_osc_server(app.handle_incoming_osc, 9005), "OSC Input Server (9005)"),
@@ -65,26 +90,11 @@ def main():
         except Exception as e:
             logger.log(f"{name} Failed: {e}", app)
 
-    # =====================================================
-    # LLM BRIDGE - Manual Control Only
-    # =====================================================
     if llm_bridge:
-        logger.log("🧠 LM Studio Bridge initialized (use ENABLE button in LLM tab)", app)
-    else:
-        logger.log("🧠 LLM Bridge not available", app)
-
+        logger.log("🧠 LM Studio Bridge initialized", app)
+    
     logger.log("=== ORP Runtime Fully Started ===", app)
-    logger.log("Herald of Darkness — Awake", app)
-
     root.mainloop()
 
-
 if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n[ORP] Shutdown by user.")
-        sys.exit(0)
-    except Exception as e:
-        print(f"[ORP] Critical Failure: {e}")
-        sys.exit(1)
+    main()
