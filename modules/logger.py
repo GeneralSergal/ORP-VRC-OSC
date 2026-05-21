@@ -11,9 +11,15 @@ class ORPLogger:
         formatted = f"[{timestamp}] {message}"
         
         # Write to file
-        with open(self.log_path, "a", encoding="utf-8") as f:
-            f.write(formatted + "\n")
+        try:
+            with open(self.log_path, "a", encoding="utf-8") as f:
+                f.write(formatted + "\n")
+        except:
+            pass
             
-        # Push to GUI if app instance is provided
+        # Push to GUI if available
         if app:
-            app.push_log(formatted)
+            try:
+                app.push_log(message)   # push_log will add its own timestamp
+            except:
+                pass
