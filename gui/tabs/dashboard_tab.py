@@ -1,101 +1,91 @@
-# gui/tabs/dashboard_tab.py
-import tkinter as tk
+import customtkinter as ctk
 import os
-from datetime import datetime
-
+import datetime
 from modules.state import state, state_lock
 from gui.widgets.hue_bar import HueBar
 from gui.widgets.glow_meter import GlowMeter
 
-
 class DashboardTab:
     def __init__(self, parent):
-        self.frame = tk.Frame(parent, bg="#0b0b0b")
-        self.accent = "#00ff99"
+        self.frame = ctk.CTkFrame(parent, fg_color="transparent")
+        self.frame.pack(fill="both", expand=True, padx=0, pady=0)
         
-        # Path for persistent logs
         self.log_file = os.path.join(os.path.dirname(__file__), "../../logs/runtime.log")
 
-        # LOG AREA
-        self.log_text = tk.Text(self.frame, height=8, bg="#050505", fg=self.accent, 
-                                font=("Consolas", 9), relief="flat")
-        self.log_text.pack(fill="x", padx=10, pady=5)
+        # UI Initialization
+        self._setup_log_card()
+        self._setup_state_card()
+        self._setup_shader_card()
         
-        # Load history immediately
+        self._last_state = {}
+
+    def _setup_log_card(self):
+        self.log_text = ctk.CTkTextbox(self.frame, height=150, font=("Consolas", 12))
+        self.log_text.pack(fill="x", padx=20, pady=(20, 10))
         self._load_log_history()
 
-        # LIVE STATE
-        self.state_frame = tk.LabelFrame(self.frame, text="Live Avatar State", bg="#0b0b0b", 
-                                         fg="#aaaaaa", font=("Consolas", 10))
-        self.state_frame.pack(fill="x", padx=10, pady=5)
-
-        self.debug_fields = ["Voice", "MainHue", "CoreGlow", "SensoryGlow", 
-                             "GroundGlow", "BreathingOn", "TailWag", "VelocityMagnitude"]
+    def _setup_state_card(self):
+        self.state_frame = ctk.CTkFrame(self.frame, corner_radius=10)
+        self.state_frame.pack(fill="x", padx=20, pady=10)
+        
+        ctk.CTkLabel(self.state_frame, text="Live Avatar State", font=("Segoe UI", 16, "bold")).pack(pady=(10, 5))
+        
         self.debug_labels = {}
-        for i, field in enumerate(self.debug_fields):
-            lbl = tk.Label(self.state_frame, text=f"{field}: --", fg=self.accent, 
-                           bg="#0b0b0b", font=("Consolas", 9), anchor="w")
-            lbl.grid(row=i, column=0, padx=12, pady=2, sticky="w")
+        fields = ["Voice", "MainHue", "CoreGlow", "SensoryGlow", "GroundGlow", 
+                  "BreathingOn", "TailWag", "VelocityMagnitude"]
+        
+        container = ctk.CTkFrame(self.state_frame, fg_color="transparent")
+        container.pack(fill="x", padx=20, pady=10)
+        
+        for field in fields:
+            lbl = ctk.CTkLabel(container, text=f"{field}: --", anchor="w", font=("Segoe UI", 11))
+            lbl.pack(fill="x", pady=1)
             self.debug_labels[field] = lbl
 
-        # ==================== SHADER VISUALIZATION ====================
-        self.shader_frame = tk.LabelFrame(self.frame, text="Shader Visualization", 
-                                          bg="#0b0b0b", fg="#aaaaaa", font=("Consolas", 10))
-        self.shader_frame.pack(fill="x", padx=10, pady=8)
+    def _setup_shader_card(self):
+        self.shader_frame = ctk.CTkFrame(self.frame, corner_radius=10)
+        self.shader_frame.pack(fill="x", padx=20, pady=10)
+        
+        ctk.CTkLabel(self.shader_frame, text="Shader Visualization", font=("Segoe UI", 16, "bold")).pack(pady=(10, 10))
 
-        container = tk.Frame(self.shader_frame, bg="#0b0b0b")
-        container.pack(padx=15, pady=10)
-
-        BAR_WIDTH = 460
-
-        # MainHue
-        tk.Label(container, text="MainHue", fg="#888888", bg="#0b0b0b", 
-                 font=("Consolas", 9)).grid(row=0, column=0, padx=(0,12), pady=6, sticky="w")
-        self.hue_bar = HueBar(container, width=BAR_WIDTH, height=24)
-        self.hue_bar.grid(row=0, column=1, pady=6)
-
-        # Glow Meters
-        self.glow_meters = {}
-        for i, glow_name in enumerate(["CoreGlow", "SensoryGlow", "GroundGlow"]):
-            tk.Label(container, text=glow_name, fg="#888888", bg="#0b0b0b", 
-                     font=("Consolas", 9)).grid(row=i+1, column=0, padx=(0,12), pady=6, sticky="w")
-            
-            meter = GlowMeter(container, label="", width=BAR_WIDTH, height=20)
-            meter.grid(row=i+1, column=1, pady=6)
-            self.glow_meters[glow_name] = meter
+        self.visual_meters = {
+            "MainHue": HueBar(self.shader_frame, label="MainHue", width=300, height=20),
+            "CoreGlow": GlowMeter(self.shader_frame, label="CoreGlow", width=300, height=20),
+            "SensoryGlow": GlowMeter(self.shader_frame, label="SensoryGlow", width=300, height=20),
+            "GroundGlow": GlowMeter(self.shader_frame, label="GroundGlow", width=300, height=20)
+        }
+        
+        for widget in self.visual_meters.values():
+            widget.pack(pady=5, padx=20, anchor="center")
 
     def _load_log_history(self):
-        """Loads the last 20 lines from the persistent log file."""
         if os.path.exists(self.log_file):
             try:
                 with open(self.log_file, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
-                    for line in lines[-20:]:
+                    for line in f.readlines()[-20:]:
                         self.push_log(line.strip())
             except Exception as e:
                 self.push_log(f"System: Could not load logs: {e}")
 
     def push_log(self, message: str):
-        """Add message with timestamp if it doesn't already have one"""
-        # If message already has timestamp, don't add another
-        if not message.strip().startswith('[') or len(message.split(']', 1)[0]) > 12:
-            timestamp = datetime.now().strftime("%H:%M:%S")
-            formatted = f"[{timestamp}] {message}"
-        else:
-            formatted = message
-
-        self.log_text.insert("end", formatted + "\n")
+        if not message.strip().startswith('['):
+            timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+            message = f"[{timestamp}] {message}"
+        self.log_text.insert("end", message + "\n")
         self.log_text.see("end")
 
     def update(self):
-        with state_lock: 
-            snapshot = state.copy()
+        with state_lock: snapshot = state.copy()
         
         for field, label in self.debug_labels.items():
             val = snapshot.get(field, "--")
-            label.config(text=f"{field}: {val:.3f}" if isinstance(val, float) else f"{field}: {val}")
+            if val != self._last_state.get(field):
+                txt = f"{field}: {val:.3f}" if isinstance(val, (float, int)) else f"{field}: {val}"
+                label.configure(text=txt)
         
-        self.hue_bar.set_value(snapshot.get("MainHue", 0.0))
+        for name, widget in self.visual_meters.items():
+            val = snapshot.get(name, 0.0)
+            if val != self._last_state.get(name):
+                widget.set_value(val)
         
-        for name, meter in self.glow_meters.items():
-            meter.set_value(snapshot.get(name, 0.0))
+        self._last_state = snapshot

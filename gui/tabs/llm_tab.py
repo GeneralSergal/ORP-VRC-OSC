@@ -1,76 +1,229 @@
-import tkinter as tk
+# =========================================================
+# gui/tabs/llm_tab.py
+# ORP v2.7
+# =========================================================
+
+import customtkinter as ctk
 import json
 import os
 
 class LLMTab:
     def __init__(self, parent, main_gui, llm_bridge=None):
-        self.frame = tk.Frame(parent, bg="#0b0b0b")
         self.main_gui = main_gui
         self.llm_bridge = llm_bridge
-        self.accent = "#00ff99"
-        
+
+        self.frame = ctk.CTkFrame(
+            parent,
+            fg_color="transparent"
+        )
+
+        self.frame.pack(
+            fill="both",
+            expand=True
+        )
+
         self._build_ui()
 
+    # =========================================================
+    # UI
+    # =========================================================
+
     def _build_ui(self):
-        tk.Label(self.frame, text="🧠 LM Studio Bridge", bg="#0b0b0b", fg=self.accent, 
-                 font=("Consolas", 16, "bold")).pack(pady=12)
+        # HEADER
+        ctk.CTkLabel(
+            self.frame,
+            text="🧠 LM Studio Bridge",
+            font=("Segoe UI", 24, "bold")
+        ).pack(pady=(15, 10))
 
-        self.status_label = tk.Label(self.frame, text="Status: Initializing...", 
-                                     fg="#ffff00", bg="#0b0b0b", font=("Consolas", 11, "bold"))
-        self.status_label.pack(pady=8)
+        self.status_label = ctk.CTkLabel(
+            self.frame,
+            text="Status: Initializing...",
+            text_color="#FF4444",
+            font=("Segoe UI", 14, "bold")
+        )
 
-        # Buttons
-        btn_frame = tk.Frame(self.frame, bg="#0b0b0b")
-        btn_frame.pack(pady=8)
-        tk.Button(btn_frame, text="ENABLE LLM", command=self.enable_llm,
-                  bg="#003300", fg=self.accent, font=("Consolas", 10, "bold"), width=18).pack(side="left", padx=6)
-        tk.Button(btn_frame, text="DISABLE LLM", command=self.disable_llm,
-                  bg="#330000", fg="#ff6666", font=("Consolas", 10, "bold"), width=18).pack(side="left", padx=6)
+        self.status_label.pack(pady=(0, 15))
 
-        # Configuration
-        cfg = tk.LabelFrame(self.frame, text=" Configuration ", bg="#0b0b0b", fg="#aaaaaa", 
-                           font=("Consolas", 10))
-        cfg.pack(fill="x", padx=20, pady=12)
+        # BUTTONS
+        btn_frame = ctk.CTkFrame(
+            self.frame,
+            fg_color="transparent"
+        )
+
+        btn_frame.pack(pady=10)
+
+        ctk.CTkButton(
+            btn_frame,
+            text="ENABLE LLM",
+            command=self.enable_llm,
+            fg_color="#1B3322",
+            hover_color="#2D5A3A",
+            width=140
+        ).pack(side="left", padx=8)
+
+        ctk.CTkButton(
+            btn_frame,
+            text="DISABLE LLM",
+            command=self.disable_llm,
+            fg_color="#331B1B",
+            hover_color="#5A2D2D",
+            width=140
+        ).pack(side="left", padx=8)
+
+        # CONFIG
+        cfg = ctk.CTkFrame(
+            self.frame,
+            corner_radius=10
+        )
+
+        cfg.pack(
+            fill="x",
+            padx=20,
+            pady=10
+        )
 
         self.entries = {}
 
         fields = [
-            ("URL:", "base_url", "base_url"),
-            ("Model:", "model", "model"),
-            ("Temperature:", "temperature", "temperature"),
-            ("Min Interval:", "min_interval", "min_interval"),
-            ("Timeout (s):", "timeout", "timeout"),
-            ("Max Retries:", "max_retries", "max_retries")
+            ("URL:", "base_url"),
+            ("Model:", "model"),
+            ("Temp:", "temperature"),
+            ("Interval:", "min_interval"),
+            ("Timeout:", "timeout"),
+            ("Retries:", "max_retries")
         ]
 
-        for label_text, cfg_key, attr in fields:
-            f = tk.Frame(cfg, bg="#0b0b0b")
-            f.pack(fill="x", padx=12, pady=3)
-            tk.Label(f, text=label_text, bg="#0b0b0b", fg="#cccccc", width=16, anchor="w",
-                     font=("Consolas", 9)).pack(side="left")
-            entry = tk.Entry(f, font=("Consolas", 9), bg="#1a1a1a", fg="#ffffff", relief="flat")
-            entry.pack(side="right", fill="x", expand=True, padx=(10, 0))
+        for label_text, attr in fields:
+            row = ctk.CTkFrame(
+                cfg,
+                fg_color="transparent"
+            )
+
+            row.pack(
+                fill="x",
+                padx=15,
+                pady=4
+            )
+
+            ctk.CTkLabel(
+                row,
+                text=label_text,
+                width=80,
+                anchor="w"
+            ).pack(side="left")
+
+            entry = ctk.CTkEntry(
+                row,
+                height=30
+            )
+
+            entry.pack(
+                side="right",
+                fill="x",
+                expand=True
+            )
+
             self.entries[attr] = entry
 
-        # Load current values
         self._load_values_into_entries()
 
-        tk.Button(self.frame, text="SAVE CONFIG", command=self.save_config,
-                  bg="#444444", fg="#ffffff", font=("Consolas", 10, "bold")).pack(pady=8)
+        # SYSTEM PROMPT
+        ctk.CTkLabel(
+            self.frame,
+            text="System Prompt:",
+            font=("Segoe UI", 13, "bold")
+        ).pack(
+            anchor="w",
+            padx=20,
+            pady=(10, 4)
+        )
 
-        # Manual Prompt
-        tk.Label(self.frame, text="Manual Prompt:", bg="#0b0b0b", fg="#ccc", 
-                 font=("Consolas", 10)).pack(anchor="w", padx=20, pady=(10,2))
-        self.prompt_entry = tk.Entry(self.frame, font=("Consolas", 9), bg="#1a1a1a", fg="#fff")
-        self.prompt_entry.pack(fill="x", padx=20, pady=4)
+        self.system_prompt_box = ctk.CTkTextbox(
+            self.frame,
+            height=180,
+            font=("Consolas", 12)
+        )
 
-        tk.Button(self.frame, text="SEND PROMPT", command=self.send_manual_prompt,
-                  bg=self.accent, fg="#000", font=("Consolas", 10, "bold")).pack(pady=6)
+        self.system_prompt_box.pack(
+            fill="x",
+            padx=20,
+            pady=(0, 10)
+        )
 
-        # Log
-        self.log_text = tk.Text(self.frame, height=12, bg="#050505", fg="#00ffaa", 
-                               font=("Consolas", 9))
-        self.log_text.pack(fill="both", expand=True, padx=20, pady=8)
+        self._load_prompt_config()
+
+        # SAVE BUTTON
+        ctk.CTkButton(
+            self.frame,
+            text="SAVE CONFIG",
+            command=self.save_config,
+            fg_color="transparent",
+            border_width=1
+        ).pack(pady=(5, 15))
+
+        # PROMPT INPUT
+        ctk.CTkLabel(
+            self.frame,
+            text="Manual Prompt:"
+        ).pack(
+            anchor="w",
+            padx=20
+        )
+
+        prompt_frame = ctk.CTkFrame(
+            self.frame,
+            fg_color="transparent"
+        )
+
+        prompt_frame.pack(
+            fill="x",
+            padx=20,
+            pady=(5, 10)
+        )
+
+        self.prompt_entry = ctk.CTkEntry(
+            prompt_frame,
+            height=36
+        )
+
+        self.prompt_entry.pack(
+            side="left",
+            fill="x",
+            expand=True,
+            padx=(0, 10)
+        )
+
+        ctk.CTkButton(
+            prompt_frame,
+            text="SEND",
+            width=90,
+            height=36,
+            command=self.send_manual_prompt
+        ).pack(side="right")
+
+        # OUTPUT
+        ctk.CTkLabel(
+            self.frame,
+            text="Bridge Output:"
+        ).pack(
+            anchor="w",
+            padx=20,
+            pady=(10, 5)
+        )
+
+        self.log_text = ctk.CTkTextbox(
+            self.frame,
+            height=260,
+            font=("Consolas", 13)
+        )
+
+        self.log_text.pack(
+            fill="both",
+            expand=True,
+            padx=20,
+            pady=(0, 20)
+        )
 
     def _load_values_into_entries(self):
         if not self.llm_bridge:
@@ -78,69 +231,89 @@ class LLMTab:
         defaults = {
             "base_url": self.llm_bridge.base_url,
             "model": self.llm_bridge.model,
-            "temperature": getattr(self.llm_bridge, "temperature", 0.78),
-            "min_interval": getattr(self.llm_bridge, "min_interval", 0.45),
-            "timeout": getattr(self.llm_bridge, "timeout", 20.0),
-            "max_retries": getattr(self.llm_bridge, "max_retries", 3)
+            "temperature": self.llm_bridge.temperature,
+            "min_interval": self.llm_bridge.min_interval,
+            "timeout": self.llm_bridge.timeout,
+            "max_retries": self.llm_bridge.max_retries
         }
         for attr, entry in self.entries.items():
-            val = defaults.get(attr, "")
-            entry.delete(0, tk.END)
-            entry.insert(0, str(val))
+            entry.delete(0, "end")
+            entry.insert(0, str(defaults.get(attr, "")))
+
+    def _load_prompt_config(self):
+        try:
+            cfg_path = os.path.join(os.path.dirname(__file__), "../../config/llm_prompts.json")
+            if not os.path.exists(cfg_path): return
+            with open(cfg_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            prompt = data.get("core_system", "")
+            self.system_prompt_box.delete("1.0", "end")
+            self.system_prompt_box.insert("1.0", prompt)
+        except Exception as e:
+            print(f"[LLM TAB] Prompt load failed: {e}")
 
     def save_config(self):
         try:
             cfg_path = os.path.join(os.path.dirname(__file__), "../../config/llm.json")
             with open(cfg_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-
             llm_data = data.setdefault("llm", {})
-
             for attr, entry in self.entries.items():
                 val = entry.get().strip()
                 if attr in ["temperature", "min_interval", "timeout"]:
-                    llm_data[attr] = float(val) if val else getattr(self.llm_bridge, attr, 0.78)
+                    llm_data[attr] = float(val)
                 elif attr == "max_retries":
-                    llm_data[attr] = int(val) if val else 3
+                    llm_data[attr] = int(val)
                 else:
                     llm_data[attr] = val
-
             with open(cfg_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
-
-            # Update live bridge
+            
+            prompt_cfg = os.path.join(os.path.dirname(__file__), "../../config/llm_prompts.json")
+            prompt_text = self.system_prompt_box.get("1.0", "end").strip()
+            with open(prompt_cfg, "w", encoding="utf-8") as f:
+                json.dump({"core_system": prompt_text}, f, indent=2)
+            
             if self.llm_bridge:
-                for k, v in llm_data.items():
-                    if hasattr(self.llm_bridge, k):
-                        setattr(self.llm_bridge, k, v)
-
-            self.receive_llm_message("✅ Configuration Saved Successfully")
+                self.llm_bridge.load_config()
+            self.receive_llm_message("[SYSTEM] Configuration + prompt saved")
         except Exception as e:
-            self.receive_llm_message(f"❌ Save Failed: {e}")
+            print(f"[LLM] Save failed: {e}")
 
     def enable_llm(self):
         if self.llm_bridge:
-            # Update from GUI fields
             self.llm_bridge.base_url = self.entries["base_url"].get().strip()
             self.llm_bridge.start()
-            self.update_status("Status: ENABLED ✓", "#00ff99")
 
     def disable_llm(self):
         if self.llm_bridge:
             self.llm_bridge.stop()
-            self.update_status("Status: DISABLED", "#ff4444")
 
     def send_manual_prompt(self):
-        if self.llm_bridge and (text := self.prompt_entry.get().strip()):
-            self.llm_bridge.send_prompt(text)
-            self.prompt_entry.delete(0, tk.END)
+        if not self.llm_bridge: return
+        text = self.prompt_entry.get().strip()
+        if not text: return
+        self.llm_bridge.send_prompt(text)
+        self.prompt_entry.delete(0, "end")
 
-    def update_status(self, text, color="#00ff99"):
-        self.status_label.config(text=text, fg=color)
+    def update_status(self, text, color="#00FF99"):
+        self.status_label.configure(text=text, text_color=color)
 
     def receive_llm_message(self, message):
-        self.log_text.insert("end", f"{message}\n")
-        self.log_text.see("end")
+        try:
+            self.log_text.insert("end", f"{message}\n\n")
+            self.log_text.see("end")
+        except Exception as e:
+            print(f"[LLM TAB] receive error: {e}")
 
+    # =========================================================
+    # UPDATE (Integrated for real-time status polling)
+    # =========================================================
     def update(self):
-        pass
+        if self.llm_bridge:
+            if self.llm_bridge.online:
+                self.update_status("Status: Server ONLINE", color="#44FF44")
+            elif self.llm_bridge.running:
+                self.update_status("Status: Connecting...", color="#FFAA00")
+            else:
+                self.update_status("Status: OFFLINE", color="#FF4444")
