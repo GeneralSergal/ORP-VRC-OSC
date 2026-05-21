@@ -6,14 +6,19 @@
 import tkinter as tk
 import threading
 import sys
+import os
 
 from modules.osc_vrc_bridge import start_osc_server
 from modules.physiology import start_physiology
 from modules.vrchat_output import start_vrchat_output
 from modules.llm_bridge_lmstudio import LMStudioBridge
+from modules.logger import ORPLogger
 from gui.orp_gui import ORPGUI
 
 def main():
+    # Initialize Persistent Logger
+    logger = ORPLogger()
+    
     print("[ORP] Boot sequence starting...")
     root = tk.Tk()
 
@@ -34,8 +39,9 @@ def main():
         if llm_bridge:
             llm_bridge.attach_gui(app)
             
-        app.push_log("ORP v2.7 Boot Sequence Started")
-        app.push_log("System Dashboard Online")
+        # Log to both File and GUI
+        logger.log("ORP v2.7 Boot Sequence Started", app)
+        logger.log("System Dashboard Online", app)
     except Exception as e:
         print(f"[ORP] GUI Critical Failure: {e}")
         root.destroy()
@@ -53,21 +59,21 @@ def main():
     for func, name in services:
         try:
             threading.Thread(target=func, daemon=True).start()
-            app.push_log(f"{name} Online")
+            logger.log(f"{name} Online", app)
         except Exception as e:
-            app.push_log(f"{name} Failed: {e}")
+            logger.log(f"{name} Failed: {e}", app)
 
     # =====================================================
-    # START LLM BRIDGE (After everything is ready)
+    # START LLM BRIDGE
     # =====================================================
     if llm_bridge:
         try:
             llm_bridge.start()
-            app.push_log("🧠 LM Studio Bridge ONLINE")
+            logger.log("🧠 LM Studio Bridge ONLINE", app)
         except Exception as e:
-            app.push_log(f"LLM Bridge Start Failed: {e}")
+            logger.log(f"LLM Bridge Start Failed: {e}", app)
 
-    app.push_log("=== ORP Runtime Fully Started ===")
+    logger.log("=== ORP Runtime Fully Started ===", app)
     root.mainloop()
 
 if __name__ == "__main__":
