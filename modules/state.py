@@ -3,9 +3,10 @@ import threading
 state_lock = threading.Lock()
 
 # Centralized State Bus
-# This structure ensures inputs and outputs share the same memory space
-# and are accessed safely via the lock.
 state = {
+    # STT Control
+    "stt_enabled": True,
+
     # Inputs (from osc_vrc_bridge)
     "Earmuffs": 1,
     "VelocityMagnitude": 0.0,
