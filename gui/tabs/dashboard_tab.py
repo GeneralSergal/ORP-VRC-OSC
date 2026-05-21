@@ -1,4 +1,5 @@
 import tkinter as tk
+import os
 from modules.state import state, state_lock
 from gui.widgets.hue_bar import HueBar
 from gui.widgets.glow_meter import GlowMeter
@@ -7,11 +8,17 @@ class DashboardTab:
     def __init__(self, parent):
         self.frame = tk.Frame(parent, bg="#0b0b0b")
         self.accent = "#00ff99"
+        
+        # Path for persistent logs
+        self.log_file = os.path.join(os.path.dirname(__file__), "../../logs/runtime.log")
 
         # LOG
         self.log_text = tk.Text(self.frame, height=8, bg="#050505", fg=self.accent, 
                                 font=("Consolas", 9), relief="flat")
         self.log_text.pack(fill="x", padx=10, pady=5)
+        
+        # Load history immediately after UI is ready
+        self._load_log_history()
 
         # LIVE STATE
         self.state_frame = tk.LabelFrame(self.frame, text="Live Avatar State", bg="#0b0b0b", 
@@ -49,10 +56,20 @@ class DashboardTab:
             tk.Label(container, text=glow_name, fg="#888888", bg="#0b0b0b", 
                      font=("Consolas", 9)).grid(row=i+1, column=0, padx=(0,12), pady=6, sticky="w")
             
-            # Use GlowMeter WITHOUT drawing extra label
             meter = GlowMeter(container, label="", width=BAR_WIDTH, height=20)
             meter.grid(row=i+1, column=1, pady=6)
             self.glow_meters[glow_name] = meter
+
+    def _load_log_history(self):
+        """Loads the last 20 lines from the persistent log file."""
+        if os.path.exists(self.log_file):
+            try:
+                with open(self.log_file, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+                    for line in lines[-20:]:
+                        self.push_log(line.strip())
+            except Exception as e:
+                self.push_log(f"System: Could not load logs: {e}")
 
     def push_log(self, message):
         self.log_text.insert("end", f"{message}\n")

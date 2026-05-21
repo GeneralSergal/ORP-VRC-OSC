@@ -15,6 +15,15 @@ class LLMTab:
         self._build_ui()
         self._start_status_checker()
 
+    def _load_config_data(self):
+        """Helper to safely read from the file."""
+        try:
+            cfg_path = os.path.join(os.path.dirname(__file__), "../../config/llm.json")
+            with open(cfg_path, "r", encoding="utf-8") as f:
+                return json.load(f).get("llm", {})
+        except:
+            return {}
+
     def _build_ui(self):
         tk.Label(self.frame, text="🧠 LM Studio Bridge", bg="#0b0b0b", fg=self.accent, 
                  font=("Consolas", 16, "bold")).pack(pady=12)
@@ -23,7 +32,6 @@ class LLMTab:
                                      fg="#ffff00", bg="#0b0b0b", font=("Consolas", 11))
         self.status_label.pack(pady=6)
 
-        # Buttons
         btnf = tk.Frame(self.frame, bg="#0b0b0b")
         btnf.pack(pady=5)
         tk.Button(btnf, text="ENABLE LLM", command=self.enable_llm, bg="#003300", fg=self.accent, 
@@ -31,31 +39,32 @@ class LLMTab:
         tk.Button(btnf, text="DISABLE LLM", command=self.disable_llm, bg="#330000", fg="#ff6666", 
                   font=("Consolas", 9, "bold"), width=16).pack(side="left", padx=5)
 
-        # Configuration Fields
         cfg = tk.LabelFrame(self.frame, text=" Configuration ", bg="#0b0b0b", fg="#aaaaaa", font=("Consolas", 10))
         cfg.pack(fill="x", padx=20, pady=10)
 
-        def add_input(label, attr):
+        config_data = self._load_config_data()
+
+        def add_input(label, config_key, attr):
             f = tk.Frame(cfg, bg="#0b0b0b")
             f.pack(fill="x", padx=10, pady=2)
             tk.Label(f, text=label, bg="#0b0b0b", fg="#ccc", width=15, anchor="w").pack(side="left")
             entry = tk.Entry(f, font=("Consolas", 9), bg="#1a1a1a", fg="#fff")
             entry.pack(side="right", fill="x", expand=True)
-            if self.llm_bridge:
-                entry.insert(0, str(getattr(self.llm_bridge, attr, "")))
+            # Use bridge attribute if available, otherwise fallback to config file
+            val = getattr(self.llm_bridge, attr, config_data.get(config_key, ""))
+            entry.insert(0, str(val))
             return entry
 
-        self.url_entry = add_input("URL:", "base_url")
-        self.model_entry = add_input("Model:", "model")
-        self.temp_entry = add_input("Temperature:", "temperature")
-        self.min_int_entry = add_input("Min Interval:", "min_interval")
-        self.timeout_entry = add_input("Timeout (s):", "timeout")
-        self.retries_entry = add_input("Max Retries:", "max_retries")
+        self.url_entry = add_input("URL:", "base_url", "base_url")
+        self.model_entry = add_input("Model:", "model", "model")
+        self.temp_entry = add_input("Temperature:", "temperature", "temperature")
+        self.min_int_entry = add_input("Min Interval:", "min_interval", "min_interval")
+        self.timeout_entry = add_input("Timeout (s):", "timeout", "timeout")
+        self.retries_entry = add_input("Max Retries:", "max_retries", "max_retries")
 
         tk.Button(self.frame, text="SAVE CONFIG", command=self.save_config,
                   bg="#444444", fg="#ffffff", font=("Consolas", 10, "bold")).pack(pady=5)
 
-        # Prompt Area
         tk.Label(self.frame, text="Manual Prompt:", bg="#0b0b0b", fg="#ccc", font=("Consolas", 10)).pack(anchor="w", padx=20, pady=(5,2))
         self.prompt_entry = tk.Entry(self.frame, font=("Consolas", 9), bg="#1a1a1a", fg="#fff")
         self.prompt_entry.pack(fill="x", padx=20, pady=2)
@@ -67,18 +76,14 @@ class LLMTab:
         self.log_text.pack(fill="both", expand=True, padx=20, pady=5)
 
     def save_config(self):
-        """Writes current UI values to config/llm.json with robust parsing."""
         try:
             cfg_path = os.path.join(os.path.dirname(__file__), "../../config/llm.json")
             with open(cfg_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
             
             def get_val(entry, default, cast_type):
-                val = entry.get().strip()
-                try:
-                    return cast_type(val)
-                except:
-                    return default
+                try: return cast_type(entry.get().strip())
+                except: return default
 
             data["llm"].update({
                 "base_url": self.url_entry.get().strip(),
@@ -101,9 +106,7 @@ class LLMTab:
             self.receive_llm_message(f"❌ Save Failed: {e}")
 
     def update(self): pass
-
     def _start_status_checker(self): threading.Thread(target=self._status_checker_loop, daemon=True).start()
-
     def _status_checker_loop(self):
         while True:
             if self.llm_bridge and getattr(self.llm_bridge, 'enabled', False): self._check_lmstudio_status()
