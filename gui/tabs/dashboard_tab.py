@@ -1,8 +1,12 @@
+# gui/tabs/dashboard_tab.py
 import tkinter as tk
 import os
+from datetime import datetime
+
 from modules.state import state, state_lock
 from gui.widgets.hue_bar import HueBar
 from gui.widgets.glow_meter import GlowMeter
+
 
 class DashboardTab:
     def __init__(self, parent):
@@ -12,12 +16,12 @@ class DashboardTab:
         # Path for persistent logs
         self.log_file = os.path.join(os.path.dirname(__file__), "../../logs/runtime.log")
 
-        # LOG
+        # LOG AREA
         self.log_text = tk.Text(self.frame, height=8, bg="#050505", fg=self.accent, 
                                 font=("Consolas", 9), relief="flat")
         self.log_text.pack(fill="x", padx=10, pady=5)
         
-        # Load history immediately after UI is ready
+        # Load history immediately
         self._load_log_history()
 
         # LIVE STATE
@@ -71,8 +75,16 @@ class DashboardTab:
             except Exception as e:
                 self.push_log(f"System: Could not load logs: {e}")
 
-    def push_log(self, message):
-        self.log_text.insert("end", f"{message}\n")
+    def push_log(self, message: str):
+        """Add message with timestamp if it doesn't already have one"""
+        # If message already has timestamp, don't add another
+        if not message.strip().startswith('[') or len(message.split(']', 1)[0]) > 12:
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            formatted = f"[{timestamp}] {message}"
+        else:
+            formatted = message
+
+        self.log_text.insert("end", formatted + "\n")
         self.log_text.see("end")
 
     def update(self):
