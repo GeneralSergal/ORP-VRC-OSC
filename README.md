@@ -1,31 +1,30 @@
 # ORP-VRC-OSC
 
-**ORP** (Organic Resonance Physiology) is a minimal, layered OSC middleware framework for VRChat avatars.
+**ORP** (Organic Resonance Physiology) is a minimal layered OSC middleware for VRChat avatars.
 
-It uses **deterministic state synthesis** across isolated layers instead of traditional blending and interpolation. This creates more stable, recoverable, and lifelike avatar physiology.
+It replaces messy parameter blending with **deterministic state synthesis** across isolated layers merged through a controlled bus. The result is more stable, recoverable, and organic avatar behavior.
 
 ---
 
 ## Core Philosophy
 
-- No parameter blending — only controlled synthesis
-- Hard domain gating (`0.00-0.50` Observation | `0.51-1.00` Locomotion)
-- Voice excitation priority bypass
-- Entropy layer for organic jitter
-- Strong deterministic recovery
-- Instant Safe Mode reset
+- **No blending. Only synthesis.**
+- Hard domain gating: `0.00–0.50` = Observation domain | `0.51–1.00` = Locomotion domain
+- Voice has priority bypass
+- Entropy layer adds natural jitter
+- Strong deterministic recovery + Safe Mode
 
 ---
 
 ## Features
 
 - Layered deterministic physiology engine
-- Real-time voice-reactive behavior
-- Organic entropy system
-- Live GUI dashboard
-- Hot-swappable config system
-- Local LLM support (ready for reconnection)
-- Clean, minimal runtime
+- Real-time voice-reactive excitation
+- Organic entropy injection
+- Updated real-time GUI dashboard
+- Hot-swappable configuration
+- Local LLM support (bridge ready for reconnection)
+- Clean minimal runtime
 
 ---
 
@@ -46,7 +45,7 @@ ORP-VRC-OSC/
 │
 ├── gui/
 │   ├── __init__.py
-│   └── orp_gui.py
+│   └── orp_gui.py          # Updated
 │
 └── modules/
     ├── __init__.py
@@ -55,7 +54,7 @@ ORP-VRC-OSC/
     ├── physiology.py
     ├── state.py
     ├── vrchat_output.py
-    └── llm_bridge_lmstudio.py     # Legacy - disconnected for now
+    └── llm_bridge_lmstudio.py   # Legacy - disconnected
 ```
 
 ---
@@ -69,7 +68,7 @@ ORP-VRC-OSC/
 
 ## Launch
 
-**Windows (Recommended):**
+**Windows (Recommended):**  
 Double-click `launch_osc.bat`
 
 **Manual:**
@@ -81,25 +80,24 @@ python main.py
 
 ## Default OSC Ports
 
-| Direction         | Port |
-|-------------------|------|
-| VRChat → ORP      | 9005 |
-| ORP → VRChat      | 9000 |
+| Direction       | Port |
+|-----------------|------|
+| VRChat → ORP    | 9005 |
+| ORP → VRChat    | 9000 |
 
 ---
 
 ## Design Principles
 
-ORP rejects:
-- Monolithic code
-- Uncontrolled interpolation
-- Hidden state drift
-- Spaghetti parameter logic
-
-The system is intentionally minimal and readable while remaining highly expandable.
+- Deterministic over interpolated
+- Readable & debuggable
+- Minimal core, high expandability
+- No hidden middleware or spaghetti
 
 ---
 
 ## License
 
 **GNU Affero General Public License v3.0 (AGPL-3.0)**
+
+**Want me to make any changes** (add screenshots section, make it shorter, more technical, etc.) before you push? Or just "**push it**"?
