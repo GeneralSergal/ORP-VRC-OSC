@@ -1,27 +1,30 @@
 # =========================================================
 # ORP-VRC-OSC v2.7 - OPTIMIZED RUNTIME
-# Main Runtime
 # =========================================================
 
-import customtkinter as ctk 
+import customtkinter as ctk
 import threading
 import sys
 import json
 import os
 
-# Helper to load scaling factor
-def get_scale():
+# ====================== GLOBAL THEME & SCALING ======================
+def load_config_scale():
     config_path = os.path.join(os.path.dirname(__file__), "config", "config.json")
-    if os.path.exists(config_path):
-        try:
+    try:
+        if os.path.exists(config_path):
             with open(config_path, "r") as f:
                 return json.load(f).get("scale", 1.25)
-        except:
-            pass
+    except:
+        pass
     return 1.25
 
-ctk.set_widget_scaling(get_scale())
+# Apply scaling BEFORE creating any widgets
+ctk.set_widget_scaling(load_config_scale())
+ctk.set_appearance_mode("Dark")
+ctk.set_default_color_theme("green")        # Good gremlin color
 
+# ====================== IMPORTS ======================
 from modules.osc_vrc_bridge import start_osc_server
 from modules.physiology import start_physiology
 from modules.vrchat_output import start_vrchat_output
@@ -34,9 +37,9 @@ def main():
     logger = ORPLogger()
     print("[ORP] Boot sequence starting...")
 
-    root = ctk.CTk() 
+    root = ctk.CTk()
     root.title("ORP Dashboard v2.7 — Herald of Darkness")
-    root.geometry("1280x920")
+    root.geometry("1320x960")
 
     # =====================================================
     # LLM BRIDGE
@@ -52,30 +55,22 @@ def main():
     # GUI
     # =====================================================
     try:
-        # ORPGUI internally handles all status updates via its own _update_loop
         app = ORPGUI(root, llm_bridge=llm_bridge)
         
         if llm_bridge:
             llm_bridge.attach_gui(app)
-            
-            # Start STT Listener
-            try:
-                start_listening(llm_bridge)
-                logger.log("🎙️ Speech Recognition Online", app)
-            except Exception as e:
-                logger.log(f"🎙️ Speech Recognition failed to start: {e}", app)
-            
+
         logger.log("ORP v2.7 Boot Sequence Started", app)
         logger.log("System Dashboard Online", app)
     except Exception as e:
-        print(f"[ORP] GUI Initialization Error: {e}")
+        print(f"[ORP] GUI Critical Failure: {e}")
         import traceback
         traceback.print_exc()
         root.destroy()
         return
 
     # =====================================================
-    # SERVICES
+    # BACKGROUND SERVICES
     # =====================================================
     services = [
         (lambda: start_osc_server(app.handle_incoming_osc, 9005), "OSC Input Server (9005)"),
@@ -90,11 +85,36 @@ def main():
         except Exception as e:
             logger.log(f"{name} Failed: {e}", app)
 
+    # =====================================================
+    # SPEECH RECOGNITION (STT)
+    # =====================================================
     if llm_bridge:
-        logger.log("🧠 LM Studio Bridge initialized", app)
-    
+        try:
+            start_listening(llm_bridge)
+            logger.log("🎙️ Speech Recognition Online", app)
+        except Exception as e:
+            logger.log(f"🎙️ Speech Recognition failed: {e}", app)
+
+    # =====================================================
+    # FINAL BOOT
+    # =====================================================
+    if llm_bridge:
+        logger.log("🧠 LM Studio Bridge initialized (use ENABLE in LLM tab)", app)
+    else:
+        logger.log("🧠 LLM Bridge not available", app)
+
     logger.log("=== ORP Runtime Fully Started ===", app)
+    logger.log("Herald of Darkness — Awake", app)
+
     root.mainloop()
 
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n[ORP] Shutdown by user.")
+        sys.exit(0)
+    except Exception as e:
+        print(f"[ORP] Critical Failure: {e}")
+        sys.exit(1)
