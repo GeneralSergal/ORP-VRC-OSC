@@ -2,26 +2,23 @@ import threading
 
 state_lock = threading.Lock()
 
+# Centralized State Bus
+# This structure ensures inputs and outputs share the same memory space
+# and are accessed safely via the lock.
 state = {
-    # Input readings
-    "Earmuffs": 0,
+    # Inputs (from osc_vrc_bridge)
+    "Earmuffs": 1,
     "VelocityMagnitude": 0.0,
-    "voice_input": 0.0,
-    "head_input": 0.0,
-
-    # Internal energy states
-    "ground_energy": 0.0,
-    "core_energy": 0.0,
-    "sensory_energy": 0.0,
-
-    # Outputs
-    "MainHue": 0.0,
+    "Voice": 0.0,
+    
+    # Internal Synthesis State
+    "state": "CALM",
+    
+    # Outputs (to vrchat_output)
+    "MainHue": 0.65,
     "CoreGlow": 0.0,
     "SensoryGlow": 0.0,
     "GroundGlow": 0.0,
     "BreathingOn": 0,
-    "TailWag": 0,
-
-    # Movement state
-    "state": "CALM"
+    "TailWag": 0
 }
