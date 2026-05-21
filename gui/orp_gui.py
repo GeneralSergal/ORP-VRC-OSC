@@ -1,5 +1,7 @@
+# gui/orp_gui.py
 import tkinter as tk
 from tkinter import ttk
+from datetime import datetime
 
 from gui.tabs.dashboard_tab import DashboardTab
 from gui.tabs.osc_debug_tab import OSCDebugTab
@@ -44,37 +46,57 @@ class ORPGUI:
 
         self._update_loop()
 
-    def push_log(self, message):
-        try:
-            self.dashboard_tab.push_log(message)
-        except:
-            print(f"[GUI] {message}")
+    # ====================== LOGGING WITH TIMESTAMP ======================
+    def push_log(self, message: str):
+        """Push log message with timestamp to GUI and console"""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        formatted = f"[{timestamp}] {message}"
 
-    def update_llm_status(self, text, color="#00ff99"):
+        print(formatted)
+
+        # Push to Dashboard tab
         try:
-            self.llm_tab.update_status(text, color)
+            if hasattr(self.dashboard_tab, 'push_log'):
+                self.dashboard_tab.push_log(formatted)
+        except:
+            pass
+
+        # Also push to LLM tab log
+        try:
+            if hasattr(self.llm_tab, 'receive_llm_message'):
+                self.llm_tab.receive_llm_message(formatted)
+        except:
+            pass
+
+    def update_llm_status(self, text: str, color="#00ff99"):
+        """Update LLM status in the LLM tab"""
+        try:
+            if hasattr(self.llm_tab, 'update_status'):
+                self.llm_tab.update_status(text, color)
         except Exception as e:
             print(f"[GUI] update_llm_status error: {e}")
 
     def handle_incoming_osc(self, address, value):
+        """Forward OSC messages to OSC Debug tab"""
         try:
-            self.osc_tab.handle_incoming_osc(address, value)
+            if hasattr(self.osc_tab, 'handle_incoming_osc'):
+                self.osc_tab.handle_incoming_osc(address, value)
         except Exception as e:
-            print(f"[GUI] OSC error: {e}")
+            print(f"[GUI] OSC handler error: {e}")
 
-    def receive_llm_message(self, message):
-        try:
-            self.llm_tab.receive_llm_message(message)
-        except Exception as e:
-            print(f"[LLM GUI] {e}")
+    def receive_llm_message(self, message: str):
+        """Callback from LLM Bridge"""
+        self.push_log(message)
 
     def _update_loop(self):
+        """Main GUI update loop"""
         try:
             self.dashboard_tab.update()
             self.osc_tab.update()
             self.llm_tab.update()
         except Exception as e:
             print(f"[GUI] Update loop error: {e}")
+        
         self.root.after(80, self._update_loop)
 
 
