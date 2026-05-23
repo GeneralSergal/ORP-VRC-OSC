@@ -1,12 +1,13 @@
 # =========================================================
 # ORP-VRC-OSC v2.7 - OPTIMIZED RUNTIME
 # =========================================================
-
 import customtkinter as ctk
 import threading
 import sys
 import json
 import os
+import time                      # ← Added this
+from datetime import datetime
 
 # ====================== GLOBAL THEME & SCALING ======================
 def load_config_scale():
@@ -19,10 +20,9 @@ def load_config_scale():
         pass
     return 1.25
 
-# Apply scaling BEFORE creating any widgets
 ctk.set_widget_scaling(load_config_scale())
 ctk.set_appearance_mode("Dark")
-ctk.set_default_color_theme("green")        # Good gremlin color
+ctk.set_default_color_theme("green")
 
 # ====================== IMPORTS ======================
 from modules.osc_vrc_bridge import start_osc_server
@@ -31,7 +31,19 @@ from modules.vrchat_output import start_vrchat_output
 from modules.llm_bridge_lmstudio import LMStudioBridge
 from modules.logger import ORPLogger
 from gui.orp_gui import ORPGUI
-from modules.speech_listener import start_listening 
+from modules.speech_listener import start_listening
+
+# NEW: Health Monitoring
+from modules.health import health
+
+# Import state safely
+try:
+    from state import state
+except ImportError:
+    try:
+        from modules.state import state
+    except ImportError:
+        state = {"excitation": 0.0, "entropy": 0.0}
 
 def main():
     logger = ORPLogger()
@@ -56,18 +68,40 @@ def main():
     # =====================================================
     try:
         app = ORPGUI(root, llm_bridge=llm_bridge)
-        
         if llm_bridge:
             llm_bridge.attach_gui(app)
-
         logger.log("ORP v2.7 Boot Sequence Started", app)
-        logger.log("System Dashboard Online", app)
     except Exception as e:
         print(f"[ORP] GUI Critical Failure: {e}")
         import traceback
         traceback.print_exc()
         root.destroy()
         return
+
+    # =====================================================
+    # HEALTH MONITORING (SHS + Drift)
+    # =====================================================
+    def health_monitor():
+        while True:
+            try:
+                excitation = getattr(state, 'excitation', 0.0) if hasattr(state, 'excitation') else state.get("excitation", 0.0)
+                entropy = getattr(state, 'entropy', 0.0) if hasattr(state, 'entropy') else state.get("entropy", 0.0)
+                
+                health.update(
+                    excitation=excitation,
+                    entropy=entropy,
+                    llm_active=llm_bridge is not None
+                )
+                
+                if hasattr(app, 'update_health_status'):
+                    app.update_health_status(health.get_status())
+            except Exception as e:
+                print(f"[Health Monitor] Minor error: {e}")
+            
+            time.sleep(8)
+
+    threading.Thread(target=health_monitor, daemon=True).start()
+    logger.log("🩺 Session Health System (SHS + Drift) Online", app)
 
     # =====================================================
     # BACKGROUND SERVICES
@@ -98,16 +132,10 @@ def main():
     # =====================================================
     # FINAL BOOT
     # =====================================================
-    if llm_bridge:
-        logger.log("🧠 LM Studio Bridge initialized (use ENABLE in LLM tab)", app)
-    else:
-        logger.log("🧠 LLM Bridge not available", app)
-
     logger.log("=== ORP Runtime Fully Started ===", app)
     logger.log("Herald of Darkness — Awake", app)
-
+    
     root.mainloop()
-
 
 if __name__ == "__main__":
     try:
