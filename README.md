@@ -1,77 +1,118 @@
-# ORP-VRC-OSC — Herald of Darkness
+# ORP-VRC-OSC v2.7
 
-**Organic Resonance Physiology** — Advanced OSC middleware for VRChat avatars.
+**Open Resonance Protocol — VRChat OSC Middleware**
+
+A deterministic, layered physiology + cognitive engine for VRChat avatars.
+
+---
+
+## Project Status
+
+- **Version**: v2.7 (Orange Zone Active)
+- **SHS**: YELLOW (Creative Mischief Mode)
+- **DRIFT**: LOW
+- **LAS**: L2/L3 Active
+- **Protocol**: 0.51_STRICT
+
+---
+
+## Architecture Overview
+
+```mermaid
+graph TD
+    A[L4 - Planning] --> B[L3 - Specification<br/>Main ORP Repo]
+    B --> C[L2 - Reference Kit]
+    C --> D[L1 - Runtime<br/>ORP-VRC-OSC]
+    
+    subgraph "Core Layers"
+        D
+    end
+    
+    E[LLM Cognitive Core] --> D
+    F[VRChat OSC] <--> D
+    G[Session Health System] --> D
+    H[Layered Authority Stack] --> D
+```
+
+**See [`CONTRACT_BRIDGE.md`](CONTRACT_BRIDGE.md) for formal layer rules.**
 
 ---
 
 ## Features
 
-- Deterministic layered physiology system
-- Real-time OSC bridge (9005 in / 9000 out)
-- Modern GUI Dashboard with live state + shader visualization
-- Local LLM integration (LM Studio)
-- **Speech-to-Text (STT)** via Vosk
-- **Text-to-Speech (TTS)** support
-- Timestamped logging
-
----
-
-## Folder Structure
-
-```bash
-ORP-VRC-OSC/
-├── main.py
-├── launch_osc.bat
-├── config/
-│   ├── llm.json
-│   ├── runtime.json
-│   └── hues.json
-├── logs/
-├── modules/
-├── gui/
-├── gui/widgets/
-├── stt_models/                # Vosk STT models
-│   ├── vosk-model-small-en-us-0.15/
-│   └── placeholder.md
-└── models/                    # TTS models (e.g. Coqui / Piper)
-    ├── en_US-lessac-medium.onnx
-    ├── en_US-lessac-medium.onnx.json
-    └── placeholder.md
-```
-
----
-
-## Dependencies
-
-```bash
-pip install python-osc customtkinter requests numpy vosk sounddevice pyaudio
-```
+- **Clean Physiology Engine** — Observation, Locomotion, Voice, Entropy layers with strict 0.51 gating
+- **LLM Integration** — LM Studio (gpt-oss-20b) with structured JSON output
+- **Session Health System (SHS)** — Real-time GREEN/YELLOW/ORANGE/RED monitoring + Drift detection
+- **Layered Authority Stack (LAS)** — Dynamic elevation based on entropy
+- **CustomTkinter Dashboard** — Live monitoring with dark cyberpunk aesthetic
+- **Speech Recognition (STT)** — Voice → LLM → Avatar reaction
+- **Manual Trigger** — Press **Enter** in console for instant test
 
 ---
 
 ## Quick Start
 
-1. Install the dependencies above.
+1. Make sure **LM Studio** is running on `http://192.168.1.100:1234` with `gpt-oss-20b`
+2. Run the middleware:
 
-2. **STT Model**  
-   Download `vosk-model-small-en-us-0.15` and extract it into `stt_models/`.
+```bash
+python main.py
+```
 
-3. **TTS Model** (optional)  
-   Place `en_US-lessac-medium.onnx` + `.json` into the `models/` folder.
-
-4. Configure `config/llm.json`.
-
-5. Run:
-   ```bash
-   python main.py
-   ```
-
-6. Enable LLM in the GUI.
+3. **Test triggers**:
+   - Press **Enter** in the console window
+   - Talk / make noise in VRChat (Voice parameter)
+   - Watch the avatar react via physiology + LLM
 
 ---
 
-**AGPL-3.0**
+## Project Structure
 
-Chaos-driven avatar middleware.
+```
+ORP-VRC-OSC/
+├── main.py
+├── CONTRACT_BRIDGE.md
+├── modules/
+│   ├── health.py
+│   ├── las.py
+│   ├── llm_bridge_lmstudio.py
+│   ├── logger.py
+│   └── ...
+├── core/
+├── gui/
+├── config/
+└── ...
+```
 
-— GeneralSergal
+---
+
+## Philosophy
+
+- **Signal > Narrative**
+- **Recoverability > Completion**
+- **Topology > Style**
+- **Verification > Fluency**
+
+We optimize for **observable, measurable, recoverable** avatar behavior instead of chasing perfect coherence.
+
+---
+
+## Links
+
+- **Main Spec**: [GeneralSergal/ORP](https://github.com/GeneralSergal/ORP)
+- **Reference Kit**: [GeneralSergal/ORP-Reference-kit](https://github.com/GeneralSergal/ORP-Reference-kit)
+
+
+---
+
+**Live by the Gate. Vent with style. Iterate forever.**
+
+---
+
+**Herald of Darkness** — *0.51 holds.*
+
+
+
+Reply with `next` and we’ll move to **Step C** (LLM Bridge cleanup + better integration).
+
+Or tell me if you want any changes to this README.
