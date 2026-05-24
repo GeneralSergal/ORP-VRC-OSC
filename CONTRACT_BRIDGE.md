@@ -1,34 +1,141 @@
-# ORP Cross-Repository Contract Bridge v0.1
+# ORP Cross-Repository Contract Bridge
 
-## Purpose
-This file defines the formal relationship between ORP repositories and runtime implementations to prevent architectural drift.
+## Version ORP Bridge Contract v1.0
 
-## Layer Definitions
+---
 
-- **L4 — Planning Layer**: Vision documents, CRA blocks, future concepts  
-  → Advisory only.
+## 1. PURPOSE
 
-- **L3 — Specification Layer**: Main ORP repository (`GeneralSergal/ORP`)  
-  → Source of truth for governance, protocols, and invariants.
+This document defines the strict boundary between:
 
-- **L2 — Reference Implementation**: `ORP-Reference-kit`  
-  → Executable validation, CTS, golden traces.
+- ORP Spec Repository ([`ORP`](https://github.com/GeneralSergal/ORP))
+- ORP Execution Repository ([`ORP-Reference-kit`](https://github.com/GeneralSergal/ORP-Reference-kit))
+- ORP VRChat OSC Runtime ([`ORP-VRC-OSC`](https://github.com/GeneralSergal/ORP-VRC-OSC))
 
-- **L1 — Runtime**: This project (`ORP-VRC-OSC`) and other deployed instances.
+It prevents implicit coupling between:
+- governance specification
+- runtime implementation
+- CTS validation expectations
+- live deployment behavior
 
-## Propagation Rules
+---
 
-1. L4 proposals must be reviewed before entering L3.
-2. L3 changes must be reflected in L2 (Reference-kit) before L1 runtimes.
-3. All major changes in this runtime (L1) should reference this bridge.
-4. "Implementation Delta" must be documented when deviating from Reference-kit.
+## 2. LAYER OWNERSHIP MODEL
 
-## Current Status (2026-05-23)
+### L3 — SPECIFICATION ([`ORP`](https://github.com/GeneralSergal/ORP))
+- Defines system invariants
+- Defines governance semantics
+- Defines conceptual architecture
+- MUST NOT define runtime behavior details
+- MUST NOT define CTS expectations
 
-- **SHS**: YELLOW (Creative Mischief Mode)
-- **DRIFT**: LOW
-- **LAS**: L2/L3 Active
-- **Protocol**: 0.51_STRICT
+---
 
-Approved by: Architect & Herald of Darkness  
-Last Updated: 2026-05-23
+### L2 — EXECUTION ([`ORP-Reference-kit`](https://github.com/GeneralSergal/ORP-Reference-kit))
+- Implements deterministic runtime behavior
+- Owns execution logic
+- Owns CTS harness implementation
+- MUST NOT redefine specification invariants
+
+---
+
+### L1 — RUNTIME ([`ORP-VRC-OSC`](https://github.com/GeneralSergal/ORP-VRC-OSC))
+- Live deployment of ORP governance in VRChat via OSC
+- Consumes L2 reference implementation as its execution contract
+- Produces observed execution traces and session telemetry
+- MUST NOT redefine spec invariants or CTS expectations
+
+#### L1 Runtime Output
+- Observed execution traces
+- Golden runs
+- Regression artifacts
+- Immutable once generated per version
+
+---
+
+## 3. CTS AUTHORITY RULE
+
+The CTS (Compliance Test Suite):
+
+- is defined in [`ORP-Reference-kit`](https://github.com/GeneralSergal/ORP-Reference-kit) ONLY
+- is NOT a spec authority
+- is a validation tool, not a truth source
+
+CTS failures indicate:
+- implementation drift OR
+- spec/implementation mismatch
+
+NOT spec invalidity.
+
+---
+
+## 4. CHANGE PROPAGATION RULE
+
+Any change MUST follow:
+
+1. Spec change ([`ORP`](https://github.com/GeneralSergal/ORP))
+   ↓
+2. Manual review / translation step
+   ↓
+3. Implementation update ([`ORP-Reference-kit`](https://github.com/GeneralSergal/ORP-Reference-kit))
+   ↓
+4. CTS update ONLY if behavior contract changes
+   ↓
+5. Golden run regeneration ONLY if explicitly approved
+
+---
+
+## 5. FORBIDDEN PATHS
+
+The following are explicitly disallowed:
+
+- CTS defining spec behavior
+- Runtime behavior defining spec truth
+- Golden traces silently redefining invariants
+- L4 planning artifacts directly altering CTS expectations
+
+---
+
+## 6. DRIFT RESOLUTION RULE
+
+If CTS fails:
+
+Classify root cause as one of:
+
+- IMPLEMENTATION_DRIFT
+- SPEC_MISMATCH
+- TEST_STALE
+
+Resolution must explicitly declare which category applies.
+
+---
+
+## 7. VERSIONING RULE
+
+- [`ORP`](https://github.com/GeneralSergal/ORP) spec versioning is independent of reference-kit versioning
+- [`ORP-Reference-kit`](https://github.com/GeneralSergal/ORP-Reference-kit) may lag spec by one major version
+- CTS version must match [`ORP-Reference-kit`](https://github.com/GeneralSergal/ORP-Reference-kit) version exactly
+
+---
+
+## 8. FINAL AUTHORITY STATEMENT
+
+No repository has global authority.
+
+Authority is partitioned:
+
+- Spec defines intent
+- Implementation defines behavior
+- CTS verifies consistency between them
+- Runtime defines observed truth
+
+---
+
+## License
+
+GNU General Public License v3.0 (GPL-3.0)
+
+Copyright 2026 Laurentius Maximus ENTROPIA
+
+This file is part of ORP — Open Resonance Protocol, licensed under the GNU General Public License v3.0.
+See the [LICENSE](LICENSE) file for full terms.
